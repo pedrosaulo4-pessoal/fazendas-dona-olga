@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Animal {
+  id           Int      @id @default(autoincrement())
+  dataRegistro DateTime
+  status       String   @default("Ativo")
+  sexo         String
+  tipo         String
+  espec        String
+  pelagem      String
+  numero       String?
+  apelido      String?
+  observacoes  String?
+  peso         Float?
+  pesoRef      Float?
+  corBrinco    String?
+  lote         String?
+  criadoPor    String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  procedimentos Procedimento[]
+  auditLogs     AuditLog[]
+}
+
+model Procedimento {
+  id               Int      @id @default(autoincrement())
+  animalId         Int?
+  animal           Animal?  @relation(fields: [animalId], references: [id])
+  tipo             String
+  loteNome         String?
+  loteObs          String?
+  dataProcedimento DateTime
+  quantidade       Int?
+  pesoEstimado     Float?
+  observacoes      String?
+  registradoPor    String
+  criadoEm         DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  usuario   String
+  acao      String
+  animalId  Int?
+  animal    Animal?  @relation(fields: [animalId], references: [id])
+  detalhes  String?
+  criadoEm  DateTime @default(now())
+}
