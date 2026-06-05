@@ -10,6 +10,7 @@ export default function VendaCompraPage() {
         {[
           { label: 'Informar compra', href: '/venda-compra/compra' },
           { label: 'Informar venda', href: '/venda-compra/venda' },
+          { label: 'Emitir relatório', href: '/venda-compra/relatorio' },
         ].map(item => (
           <button key={item.href} onClick={() => router.push(item.href)}
             className="w-full bg-[#FFD700] text-gray-900 text-lg font-semibold py-7 rounded-lg

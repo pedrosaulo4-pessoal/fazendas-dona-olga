@@ -79,7 +79,7 @@ export default function MenuClient({ user }: { user: SessionUser }) {
             <div className="flex flex-col items-end gap-2 ml-2 flex-shrink-0">
               {user.perfil === 'admin' && (
                 <button
-                  onClick={() => router.push('/em-construcao')}
+                  onClick={() => router.push('/admin')}
                   className="bg-[#6b8e23] text-white text-[11px] font-bold px-3 py-1.5 rounded
                              shadow-[2px_2px_0_rgba(0,0,0,0.2)]
                              active:shadow-none active:translate-x-[2px] active:translate-y-[2px]

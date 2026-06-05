@@ -8,6 +8,7 @@ const ROTAS_PROTEGIDAS = [
   '/venda-compra',
   '/outros',
   '/consultar',
+  '/admin',
   '/em-construcao',
 ];
 
@@ -44,6 +45,7 @@ export const config = {
     '/venda-compra/:path*',
     '/outros/:path*',
     '/consultar/:path*',
+    '/admin/:path*',
     '/em-construcao',
   ],
 };

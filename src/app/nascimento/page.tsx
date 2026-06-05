@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
 import { Campo, Input, Select, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
@@ -10,11 +10,23 @@ const PELAGENS = ['Branco','Preto','Vermelho','Marrom Escuro','Marrom Claro','Am
 export default function NascimentoPage() {
   const router = useRouter();
   const [form, setForm] = useState({ numeroMae: '', apelidoMae: '', dataNascimento: new Date().toISOString().split('T')[0], sexo: 'F', pesoEstimado: '', lote: 'Paridas', pelagem: 'Branco' });
+  const [foto, setFoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
+  const inputFotoRef = useRef<HTMLInputElement>(null);
 
   function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+
+  function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFoto(file);
+    const reader = new FileReader();
+    reader.onload = ev => setPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +52,20 @@ export default function NascimentoPage() {
         }),
       });
       if (!res.ok) throw new Error();
+
+      // Envia foto se houver
+      if (foto) {
+        const animal = await res.clone().json().catch(() => null);
+        if (animal?.id) {
+          const fd = new FormData();
+          fd.append('foto', foto);
+          fd.append('animalId', String(animal.id));
+          fd.append('numero', 'novo');
+          fd.append('dataFoto', form.dataNascimento);
+          await fetch('/api/foto', { method: 'POST', body: fd });
+        }
+      }
+
       setSucesso(true);
     } catch { setErro('Erro ao salvar. Tente novamente.'); }
     finally { setLoading(false); }
@@ -69,6 +95,22 @@ export default function NascimentoPage() {
           <Select value={form.lote} onChange={e => set('lote', e.target.value)} required>
             {LOTES.map(l => <option key={l} value={l}>{l}</option>)}
           </Select>
+        </Campo>
+        <Campo label="Insira uma Foto">
+          <div
+            onClick={() => inputFotoRef.current?.click()}
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg bg-white
+                       shadow-[3px_3px_0_rgba(0,0,0,0.12)] flex flex-col items-center justify-center
+                       cursor-pointer active:bg-gray-50 transition-all"
+            style={{ minHeight: '90px' }}
+          >
+            {preview ? (
+              <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
+            ) : (
+              <span className="text-gray-500 text-base py-6">Abrir Galeria</span>
+            )}
+          </div>
+          <input ref={inputFotoRef} type="file" accept="image/*" className="hidden" onChange={handleFoto} />
         </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />

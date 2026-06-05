@@ -29,7 +29,7 @@ export default function Header({ saudacao, perfil }: HeaderProps) {
           </div>
           {perfil === 'admin' && (
             <button
-              onClick={() => router.push('/em-construcao')}
+              onClick={() => router.push('/admin')}
               className="bg-[#6b8e23] text-white text-[11px] font-bold px-3 py-1.5 rounded ml-2 flex-shrink-0
                          shadow-[2px_2px_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
             >
