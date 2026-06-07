@@ -2,18 +2,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
-import BuscaAnimal from '@/components/BuscaAnimal';
+import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
+import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
 
 export default function DoencaPage() {
   const router = useRouter();
   const [animalId, setAnimalId] = useState<number | null>(null);
   const [semBrinco, setSemBrinco] = useState(false);
-  const [form, setForm] = useState({ apelidoMae: '', numeroMae: '', dataObservacao: new Date().toISOString().split('T')[0], sexo: '', pesoKg: '', lote: '', detalhe: '' });
+  const [animal, setAnimal] = useState<AnimalEncontrado | null>(null);
+  const [pesoKg, setPesoKg] = useState('');
+  const [lote, setLote] = useState('');
+  const [dataObservacao, setDataObservacao] = useState(new Date().toISOString().split('T')[0]);
+  const [detalhe, setDetalhe] = useState('');
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+
+  function handleSelect(a: AnimalEncontrado) {
+    setAnimalId(a.id);
+    setAnimal(a);
+    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setLote(a.lote ?? '');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +34,14 @@ export default function DoencaPage() {
       const res = await fetch('/api/animais', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ animalId, acao: 'doenca', dataObservacao: form.dataObservacao, observacoes: `DOENÇA/CONDIÇÃO (${form.dataObservacao}): ${form.detalhe}`, sexo: form.sexo, lote: form.lote }),
+        body: JSON.stringify({
+          animalId,
+          acao: 'doenca',
+          dataObservacao,
+          observacoes: `DOENÇA/CONDIÇÃO (${dataObservacao}): ${detalhe}`,
+          sexo: animal?.sexo,
+          lote: lote || animal?.lote,
+        }),
       });
       if (!res.ok) throw new Error();
       setSucesso(true);
@@ -35,20 +53,23 @@ export default function DoencaPage() {
     <FormPage titulo="Informar Doença ou Condição">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Campo label="Nº do Animal">
-          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco}
-            onSelect={a => { setAnimalId(a.id); setForm(f => ({ ...f, sexo: a.sexo, lote: a.lote ?? '', pesoKg: String((a.peso ?? 0) * 15) })); }} />
+          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={handleSelect} />
         </Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Nome/Apelido da Mãe"><Input value={form.apelidoMae} onChange={e => set('apelidoMae', e.target.value)} /></Campo>
-          <Campo label="Nº da Mãe"><Input value={form.numeroMae} onChange={e => set('numeroMae', e.target.value)} /></Campo>
-        </div>
-        <Campo label="Data da Observação"><Input type="date" value={form.dataObservacao} onChange={e => set('dataObservacao', e.target.value)} required /></Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Sexo"><Input value={form.sexo} readOnly className="bg-gray-50" /></Campo>
-          <Campo label="Peso em KG"><Input type="number" step="0.1" value={form.pesoKg} onChange={e => set('pesoKg', e.target.value)} /></Campo>
-        </div>
-        <Campo label="Lote"><Input value={form.lote} readOnly className="bg-gray-50" /></Campo>
-        <Campo label="Detalhar a Situação"><Textarea value={form.detalhe} onChange={e => set('detalhe', e.target.value)} placeholder="Descreva os sintomas ou condição observada..." required /></Campo>
+
+        {animal && (
+          <AnimalSelecionado
+            animal={animal}
+            pesoKg={pesoKg} onPesoKgChange={setPesoKg}
+            lote={lote} onLoteChange={setLote}
+          />
+        )}
+
+        <Campo label="Data da Observação">
+          <Input type="date" value={dataObservacao} onChange={e => setDataObservacao(e.target.value)} required />
+        </Campo>
+        <Campo label="Detalhar a Situação">
+          <Textarea value={detalhe} onChange={e => setDetalhe(e.target.value)} placeholder="Descreva os sintomas ou condição observada..." required />
+        </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />
       </form>

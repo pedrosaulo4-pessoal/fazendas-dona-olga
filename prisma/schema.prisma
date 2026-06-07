@@ -22,6 +22,8 @@ model Animal {
   pesoRef      Float?
   corBrinco    String?
   lote         String?
+  numeroMae    String?
+  apelidoMae   String?
   criadoPor    String?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt

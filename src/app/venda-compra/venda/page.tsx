@@ -2,19 +2,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
-import BuscaAnimal from '@/components/BuscaAnimal';
+import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
+import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
 
 export default function VendaPage() {
   const router = useRouter();
   const [animalId, setAnimalId] = useState<number | null>(null);
   const [semBrinco, setSemBrinco] = useState(false);
-  const [form, setForm] = useState({ apelido: '', dataVenda: new Date().toISOString().split('T')[0], sexo: '', pesoEstimado: '', destino: '', observacoes: '' });
+  const [animal, setAnimal] = useState<AnimalEncontrado | null>(null);
+  const [pesoKg, setPesoKg] = useState('');
+  const [lote, setLote] = useState('');
+  const [dataVenda, setDataVenda] = useState(new Date().toISOString().split('T')[0]);
+  const [destino, setDestino] = useState('');
+  const [observacoes, setObservacoes] = useState('');
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
 
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+  function handleSelect(a: AnimalEncontrado) {
+    setAnimalId(a.id);
+    setAnimal(a);
+    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setLote(a.lote ?? '');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +35,12 @@ export default function VendaPage() {
       const res = await fetch('/api/venda-compra', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ animalId, operacao: 'venda', dataVenda: form.dataVenda, observacoes: `Vendido em ${form.dataVenda}. Destino: ${form.destino}. ${form.observacoes}` }),
+        body: JSON.stringify({
+          animalId,
+          operacao: 'venda',
+          dataVenda,
+          observacoes: `Vendido em ${dataVenda}. Destino: ${destino}. ${observacoes}`,
+        }),
       });
       if (!res.ok) throw new Error();
       setSucesso(true);
@@ -35,15 +51,27 @@ export default function VendaPage() {
   return (
     <FormPage titulo="Informar Venda">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Campo label="Nº do Animal"><BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={a => { setAnimalId(a.id); setForm(f => ({ ...f, sexo: a.sexo, pesoEstimado: String(a.peso ?? '') })); }} /></Campo>
-        <Campo label="Nome/Apelido do Animal"><Input value={form.apelido} onChange={e => set('apelido', e.target.value)} /></Campo>
-        <Campo label="Informe a Data da Venda"><Input type="date" value={form.dataVenda} onChange={e => set('dataVenda', e.target.value)} required /></Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Sexo"><Input value={form.sexo} readOnly className="bg-gray-50" /></Campo>
-          <Campo label="Peso Estimado (@)"><Input type="number" step="0.1" value={form.pesoEstimado} onChange={e => set('pesoEstimado', e.target.value)} /></Campo>
-        </div>
-        <Campo label="Informe o Destino do Animal"><Input value={form.destino} onChange={e => set('destino', e.target.value)} placeholder="Fazenda / Frigorífico de destino" required /></Campo>
-        <Campo label="Observações"><Textarea value={form.observacoes} onChange={e => set('observacoes', e.target.value)} /></Campo>
+        <Campo label="Nº do Animal">
+          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={handleSelect} />
+        </Campo>
+
+        {animal && (
+          <AnimalSelecionado
+            animal={animal}
+            pesoKg={pesoKg} onPesoKgChange={setPesoKg}
+            lote={lote} onLoteChange={setLote}
+          />
+        )}
+
+        <Campo label="Informe a Data da Venda">
+          <Input type="date" value={dataVenda} onChange={e => setDataVenda(e.target.value)} required />
+        </Campo>
+        <Campo label="Informe o Destino do Animal">
+          <Input value={destino} onChange={e => setDestino(e.target.value)} placeholder="Fazenda / Frigorífico de destino" required />
+        </Campo>
+        <Campo label="Observações">
+          <Textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} />
+        </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />
       </form>

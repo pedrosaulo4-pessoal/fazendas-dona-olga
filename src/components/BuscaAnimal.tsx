@@ -2,26 +2,30 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-interface Animal {
+export interface AnimalEncontrado {
   id: number;
   numero: string | null;
   apelido: string | null;
   sexo: string;
+  tipo: string;
+  espec: string;
   peso: number | null;
   lote: string | null;
-  espec: string;
+  corBrinco: string | null;
+  numeroMae: string | null;
+  apelidoMae: string | null;
   observacoes: string | null;
 }
 
 interface Props {
-  onSelect: (animal: Animal) => void;
+  onSelect: (animal: AnimalEncontrado) => void;
   semBrinco?: boolean;
   onSemBrincoChange?: (val: boolean) => void;
 }
 
 export default function BuscaAnimal({ onSelect, semBrinco, onSemBrincoChange }: Props) {
   const [q, setQ] = useState('');
-  const [resultados, setResultados] = useState<Animal[]>([]);
+  const [resultados, setResultados] = useState<AnimalEncontrado[]>([]);
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,7 +48,7 @@ export default function BuscaAnimal({ onSelect, semBrinco, onSemBrincoChange }: 
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  function label(a: Animal) {
+  function label(a: AnimalEncontrado) {
     const n = a.numero ?? a.apelido ?? `ID${a.id}`;
     return a.apelido ? `${n} — ${a.apelido}` : n;
   }
@@ -74,6 +78,7 @@ export default function BuscaAnimal({ onSelect, semBrinco, onSemBrincoChange }: 
                   <span className="font-bold text-[#1a237e]">{a.numero ?? '—'}</span>
                   {a.apelido && <span className="text-gray-500 text-sm ml-2">{a.apelido}</span>}
                   <span className="text-gray-400 text-xs ml-2">{a.espec} · {a.sexo}</span>
+                  {a.corBrinco && <span className="text-gray-400 text-xs ml-2">· {a.corBrinco}</span>}
                 </button>
               ))}
             </div>

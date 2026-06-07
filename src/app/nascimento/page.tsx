@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
+import CorBrinco from '@/components/CorBrinco';
 import { Campo, Input, Select, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
 
 const LOTES = ['Paridas','Bezerros Engorda','Novilhada','Leiteiro','Descarte','24h','Perdido'];
@@ -9,7 +10,11 @@ const PELAGENS = ['Branco','Preto','Vermelho','Marrom Escuro','Marrom Claro','Am
 
 export default function NascimentoPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ numeroMae: '', apelidoMae: '', dataNascimento: new Date().toISOString().split('T')[0], sexo: 'F', pesoEstimado: '', lote: 'Paridas', pelagem: 'Branco' });
+  const [form, setForm] = useState({
+    numeroMae: '', apelidoMae: '',
+    dataNascimento: new Date().toISOString().split('T')[0],
+    sexo: 'F', pesoEstimado: '', lote: 'Paridas', pelagem: 'Branco', corBrinco: '',
+  });
   const [foto, setFoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,7 +38,7 @@ export default function NascimentoPage() {
     setErro(''); setLoading(true);
     try {
       const mae = form.numeroMae || form.apelidoMae;
-      const obs = `Nascimento estimado (N. Est.) ${new Date(form.dataNascimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}. Filho${form.sexo === 'F' ? 'a' : ''} da ${mae}`;
+      const obs = `Nascimento estimado (N. Est.) ${new Date(form.dataNascimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}${mae ? `. Filho${form.sexo === 'F' ? 'a' : ''} da ${mae}` : ''}`;
       const res = await fetch('/api/animais', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,26 +51,24 @@ export default function NascimentoPage() {
           pelagem: form.pelagem,
           numero: null,
           observacoes: obs,
-          peso: form.pesoEstimado || null,
+          peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) : null,
           lote: form.lote,
+          corBrinco: form.corBrinco || null,
+          numeroMae: form.numeroMae || null,
+          apelidoMae: form.apelidoMae || null,
           acao: 'nascimento',
         }),
       });
       if (!res.ok) throw new Error();
-
-      // Envia foto se houver
-      if (foto) {
-        const animal = await res.clone().json().catch(() => null);
-        if (animal?.id) {
-          const fd = new FormData();
-          fd.append('foto', foto);
-          fd.append('animalId', String(animal.id));
-          fd.append('numero', 'novo');
-          fd.append('dataFoto', form.dataNascimento);
-          await fetch('/api/foto', { method: 'POST', body: fd });
-        }
+      const animalCriado = await res.json();
+      if (foto && animalCriado?.id) {
+        const fd = new FormData();
+        fd.append('foto', foto);
+        fd.append('animalId', String(animalCriado.id));
+        fd.append('numero', 'novo');
+        fd.append('dataFoto', form.dataNascimento);
+        await fetch('/api/foto', { method: 'POST', body: fd });
       }
-
       setSucesso(true);
     } catch { setErro('Erro ao salvar. Tente novamente.'); }
     finally { setLoading(false); }
@@ -74,22 +77,31 @@ export default function NascimentoPage() {
   return (
     <FormPage titulo="Informar Nascimento">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Campo label="Nº da Mãe"><Input value={form.numeroMae} onChange={e => set('numeroMae', e.target.value)} placeholder="Ex: A199" /></Campo>
-        <Campo label="Nome/Apelido da Mãe"><Input value={form.apelidoMae} onChange={e => set('apelidoMae', e.target.value)} placeholder="Ex: Devassa" /></Campo>
-        <Campo label="Informe a Data de Nascimento"><Input type="date" value={form.dataNascimento} onChange={e => set('dataNascimento', e.target.value)} required /></Campo>
         <div className="grid grid-cols-2 gap-3">
-          <Campo label="Informe o Sexo">
+          <Campo label="Nº da Mãe"><Input value={form.numeroMae} onChange={e => set('numeroMae', e.target.value)} placeholder="Ex: A199" /></Campo>
+          <Campo label="Apelido da Mãe"><Input value={form.apelidoMae} onChange={e => set('apelidoMae', e.target.value)} placeholder="Ex: Devassa" /></Campo>
+        </div>
+        <Campo label="Informe a Data de Nascimento">
+          <Input type="date" value={form.dataNascimento} onChange={e => set('dataNascimento', e.target.value)} required />
+        </Campo>
+        <div className="grid grid-cols-2 gap-3">
+          <Campo label="Sexo">
             <Select value={form.sexo} onChange={e => set('sexo', e.target.value)} required>
               <option value="F">Fêmea (F)</option>
               <option value="M">Macho (M)</option>
             </Select>
           </Campo>
-          <Campo label="Peso Estimado (@)"><Input type="number" step="0.1" value={form.pesoEstimado} onChange={e => set('pesoEstimado', e.target.value)} placeholder="0.0" /></Campo>
+          <Campo label="Peso Estimado (KG)">
+            <Input type="number" step="0.1" value={form.pesoEstimado} onChange={e => set('pesoEstimado', e.target.value)} placeholder="0.0" />
+          </Campo>
         </div>
         <Campo label="Pelagem">
           <Select value={form.pelagem} onChange={e => set('pelagem', e.target.value)} required>
             {PELAGENS.map(p => <option key={p} value={p}>{p}</option>)}
           </Select>
+        </Campo>
+        <Campo label="Cor do Brinco">
+          <CorBrinco value={form.corBrinco} onChange={v => set('corBrinco', v)} />
         </Campo>
         <Campo label="Informe o Lote">
           <Select value={form.lote} onChange={e => set('lote', e.target.value)} required>
@@ -97,18 +109,13 @@ export default function NascimentoPage() {
           </Select>
         </Campo>
         <Campo label="Insira uma Foto">
-          <div
-            onClick={() => inputFotoRef.current?.click()}
+          <div onClick={() => inputFotoRef.current?.click()}
             className="w-full border-2 border-dashed border-gray-300 rounded-lg bg-white
                        shadow-[3px_3px_0_rgba(0,0,0,0.12)] flex flex-col items-center justify-center
-                       cursor-pointer active:bg-gray-50 transition-all"
-            style={{ minHeight: '90px' }}
-          >
-            {preview ? (
-              <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
-            ) : (
-              <span className="text-gray-500 text-base py-6">Abrir Galeria</span>
-            )}
+                       cursor-pointer active:bg-gray-50 transition-all" style={{ minHeight: '90px' }}>
+            {preview
+              ? <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
+              : <span className="text-gray-500 text-base py-6">Abrir Galeria</span>}
           </div>
           <input ref={inputFotoRef} type="file" accept="image/*" className="hidden" onChange={handleFoto} />
         </Campo>

@@ -2,18 +2,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
-import BuscaAnimal from '@/components/BuscaAnimal';
+import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
+import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
 
 export default function AbortoPage() {
   const router = useRouter();
   const [animalId, setAnimalId] = useState<number | null>(null);
   const [semBrinco, setSemBrinco] = useState(false);
-  const [form, setForm] = useState({ apelidoMae: '', numeroMae: '', dataAborto: new Date().toISOString().split('T')[0], sexo: '', pesoKg: '', lote: '', detalhe: '' });
+  const [animal, setAnimal] = useState<AnimalEncontrado | null>(null);
+  const [pesoKg, setPesoKg] = useState('');
+  const [lote, setLote] = useState('');
+  const [dataAborto, setDataAborto] = useState(new Date().toISOString().split('T')[0]);
+  const [detalhe, setDetalhe] = useState('');
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+
+  function handleSelect(a: AnimalEncontrado) {
+    setAnimalId(a.id);
+    setAnimal(a);
+    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setLote(a.lote ?? '');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +34,15 @@ export default function AbortoPage() {
       await fetch('/api/procedimento', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ animalId, tipo: 'Aborto', dataProcedimento: form.dataAborto, observacoes: form.detalhe, registradoPor: 'usuario' }),
+        body: JSON.stringify({
+          animalId,
+          tipo: 'Aborto',
+          dataProcedimento: dataAborto,
+          observacoes: detalhe,
+          registradoPor: 'usuario',
+          pesoEstimado: pesoKg ? parseFloat(pesoKg) / 15 : null,
+          loteNome: lote || null,
+        }),
       });
       setSucesso(true);
     } catch { setErro('Erro ao salvar.'); }
@@ -34,20 +53,23 @@ export default function AbortoPage() {
     <FormPage titulo="Informar Aborto">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Campo label="Nº do Animal">
-          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco}
-            onSelect={a => { setAnimalId(a.id); setForm(f => ({ ...f, sexo: a.sexo, lote: a.lote ?? '' })); }} />
+          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={handleSelect} />
         </Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Nome/Apelido da Mãe"><Input value={form.apelidoMae} onChange={e => set('apelidoMae', e.target.value)} /></Campo>
-          <Campo label="Nº da Mãe"><Input value={form.numeroMae} onChange={e => set('numeroMae', e.target.value)} /></Campo>
-        </div>
-        <Campo label="Informe a Data do Aborto"><Input type="date" value={form.dataAborto} onChange={e => set('dataAborto', e.target.value)} required /></Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Sexo"><Input value={form.sexo} readOnly className="bg-gray-50" /></Campo>
-          <Campo label="Peso em KG"><Input type="number" step="0.1" value={form.pesoKg} onChange={e => set('pesoKg', e.target.value)} /></Campo>
-        </div>
-        <Campo label="Lote"><Input value={form.lote} readOnly className="bg-gray-50" /></Campo>
-        <Campo label="Detalhar a Situação"><Textarea value={form.detalhe} onChange={e => set('detalhe', e.target.value)} placeholder="Descreva o ocorrido..." required /></Campo>
+
+        {animal && (
+          <AnimalSelecionado
+            animal={animal}
+            pesoKg={pesoKg} onPesoKgChange={setPesoKg}
+            lote={lote} onLoteChange={setLote}
+          />
+        )}
+
+        <Campo label="Informe a Data do Aborto">
+          <Input type="date" value={dataAborto} onChange={e => setDataAborto(e.target.value)} required />
+        </Campo>
+        <Campo label="Detalhar a Situação">
+          <Textarea value={detalhe} onChange={e => setDetalhe(e.target.value)} placeholder="Descreva o ocorrido..." required />
+        </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />
       </form>

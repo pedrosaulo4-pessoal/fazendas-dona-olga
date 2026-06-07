@@ -2,14 +2,19 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import FormPage from '@/components/FormPage';
-import BuscaAnimal from '@/components/BuscaAnimal';
+import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
+import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
 
 export default function MortePage() {
   const router = useRouter();
   const [animalId, setAnimalId] = useState<number | null>(null);
   const [semBrinco, setSemBrinco] = useState(false);
-  const [form, setForm] = useState({ apelidoAnimal: '', dataMorte: new Date().toISOString().split('T')[0], sexo: '', pesoEstimado: '', observacoes: '' });
+  const [animal, setAnimal] = useState<AnimalEncontrado | null>(null);
+  const [pesoKg, setPesoKg] = useState('');
+  const [lote, setLote] = useState('');
+  const [dataMorte, setDataMorte] = useState(new Date().toISOString().split('T')[0]);
+  const [observacoes, setObservacoes] = useState('');
   const [foto, setFoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -17,7 +22,12 @@ export default function MortePage() {
   const [erro, setErro] = useState('');
   const inputFotoRef = useRef<HTMLInputElement>(null);
 
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+  function handleSelect(a: AnimalEncontrado) {
+    setAnimalId(a.id);
+    setAnimal(a);
+    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setLote(a.lote ?? '');
+  }
 
   function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -36,20 +46,22 @@ export default function MortePage() {
       const res = await fetch('/api/morte', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ animalId, dataMorte: form.dataMorte, peso: form.pesoEstimado, observacoes: form.observacoes }),
+        body: JSON.stringify({
+          animalId,
+          dataMorte,
+          peso: pesoKg ? parseFloat(pesoKg) / 15 : null,
+          observacoes,
+        }),
       });
       if (!res.ok) throw new Error();
-
-      // Envia foto se houver
       if (foto && animalId) {
         const fd = new FormData();
         fd.append('foto', foto);
         fd.append('animalId', String(animalId));
-        fd.append('numero', String(animalId));
-        fd.append('dataFoto', form.dataMorte);
+        fd.append('numero', animal?.numero ?? String(animalId));
+        fd.append('dataFoto', dataMorte);
         await fetch('/api/foto', { method: 'POST', body: fd });
       }
-
       setSucesso(true);
     } catch { setErro('Erro ao salvar. Tente novamente.'); }
     finally { setLoading(false); }
@@ -59,34 +71,31 @@ export default function MortePage() {
     <FormPage titulo="Informar Morte">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Campo label="Nº do Animal">
-          <BuscaAnimal
-            semBrinco={semBrinco}
-            onSemBrincoChange={setSemBrinco}
-            onSelect={a => { setAnimalId(a.id); setForm(f => ({ ...f, sexo: a.sexo, pesoEstimado: String(a.peso ?? '') })); }}
-          />
+          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={handleSelect} />
         </Campo>
-        <Campo label="Nome/Apelido do Animal"><Input value={form.apelidoAnimal} onChange={e => set('apelidoAnimal', e.target.value)} placeholder="Opcional" /></Campo>
-        <Campo label="Informe a Data da Morte"><Input type="date" value={form.dataMorte} onChange={e => set('dataMorte', e.target.value)} required /></Campo>
-        <div className="grid grid-cols-2 gap-3">
-          <Campo label="Sexo"><Input value={form.sexo} readOnly placeholder="Auto" className="bg-gray-50" /></Campo>
-          <Campo label="Peso Estimado (@)"><Input type="number" step="0.1" value={form.pesoEstimado} onChange={e => set('pesoEstimado', e.target.value)} /></Campo>
-        </div>
+
+        {animal && (
+          <AnimalSelecionado
+            animal={animal}
+            pesoKg={pesoKg} onPesoKgChange={setPesoKg}
+            lote={lote} onLoteChange={setLote}
+          />
+        )}
+
+        <Campo label="Informe a Data da Morte">
+          <Input type="date" value={dataMorte} onChange={e => setDataMorte(e.target.value)} required />
+        </Campo>
         <Campo label="Observações (Causa da Morte e Local)">
-          <Textarea value={form.observacoes} onChange={e => set('observacoes', e.target.value)} placeholder="Descreva a causa e local da morte..." required />
+          <Textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Descreva a causa e local da morte..." required />
         </Campo>
         <Campo label="Insira uma Foto">
-          <div
-            onClick={() => inputFotoRef.current?.click()}
+          <div onClick={() => inputFotoRef.current?.click()}
             className="w-full border-2 border-dashed border-gray-300 rounded-lg bg-white
                        shadow-[3px_3px_0_rgba(0,0,0,0.12)] flex flex-col items-center justify-center
-                       cursor-pointer active:bg-gray-50 transition-all"
-            style={{ minHeight: '90px' }}
-          >
-            {preview ? (
-              <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
-            ) : (
-              <span className="text-gray-500 text-base py-6">Abrir Galeria</span>
-            )}
+                       cursor-pointer active:bg-gray-50 transition-all" style={{ minHeight: '90px' }}>
+            {preview
+              ? <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
+              : <span className="text-gray-500 text-base py-6">Abrir Galeria</span>}
           </div>
           <input ref={inputFotoRef} type="file" accept="image/*" className="hidden" onChange={handleFoto} />
         </Campo>
