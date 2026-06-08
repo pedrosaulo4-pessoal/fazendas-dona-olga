@@ -1,16 +1,19 @@
 import { PrismaClient } from '@/generated/prisma/client';
 
+// Lê via colchetes para evitar que o Turbopack substitua o valor em build-time
+const env = process.env as Record<string, string | undefined>;
+
 function createPrismaClient(): PrismaClient {
-  if (process.env.TURSO_DATABASE_URL) {
+  const tursoUrl   = env['TURSO_DATABASE_URL']?.trim();
+  const tursoToken = env['TURSO_AUTH_TOKEN']?.trim();
+
+  if (tursoUrl && tursoUrl !== 'undefined') {
     // Produção: Turso (SQLite na nuvem)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createClient } = require('@libsql/client');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSql } = require('@prisma/adapter-libsql');
-    const libsql = createClient({
-      url: process.env.TURSO_DATABASE_URL.trim(),
-      authToken: process.env.TURSO_AUTH_TOKEN?.trim(),
-    });
+    const libsql = createClient({ url: tursoUrl, authToken: tursoToken });
     const adapter = new PrismaLibSql(libsql);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new PrismaClient({ adapter } as any);
