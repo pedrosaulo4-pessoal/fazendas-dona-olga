@@ -15,8 +15,8 @@ export default function Header({ saudacao, perfil }: HeaderProps) {
     <header className="bg-[#1a237e] px-4 py-3 shadow-md">
       <div className="flex items-start gap-3">
         <button onClick={() => router.push('/menu')} className="flex-shrink-0">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
-            <Image src="/logo.png" alt="Logo" width={56} height={56} className="object-contain" priority />
+          <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
+            <Image src="/logo.png" alt="Logo" width={36} height={36} className="object-contain" priority />
           </div>
         </button>
         <div className="flex-1 flex items-start justify-between min-w-0">

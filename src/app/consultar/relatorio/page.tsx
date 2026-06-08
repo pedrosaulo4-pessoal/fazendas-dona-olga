@@ -81,7 +81,7 @@ export default function RelatorioPage() {
         {dados.pesoMedio != null && (
           <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Peso Médio (ativos)</p>
-            <p className="text-2xl font-bold text-[#1a237e]">{(dados.pesoMedio * 15).toFixed(0)} kg</p>
+            <p className="text-2xl font-bold text-[#1a237e]">{(dados.pesoMedio * 30).toFixed(0)} kg</p>
             <p className="text-xs text-gray-500">{dados.pesoMedio.toFixed(2)} arrobas</p>
           </div>
         )}

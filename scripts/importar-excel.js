@@ -104,7 +104,7 @@ function main() {
         const apMae   = limpa(row[13]);
         const obs     = limpa(row[14]);
         const pesoKg  = row[15] ? parseFloat(row[15]) : null;
-        const pesoArr = pesoKg ? pesoKg / 15 : null; // converte para arrobas
+        const pesoArr = pesoKg ? pesoKg / 30 : null; // converte para arrobas (1@ = 30kg, rendimento 50%)
         const corBr   = limpaCorBrinco(row[16]);
         const lote    = limpa(row[17]);
 

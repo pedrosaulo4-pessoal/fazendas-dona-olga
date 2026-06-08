@@ -5,6 +5,7 @@ import FormPage from '@/components/FormPage';
 import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
 import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
+import Medicamentos from '@/components/Medicamentos';
 
 export default function ProcedimentoIndividualPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function ProcedimentoIndividualPage() {
   const [lote, setLote] = useState('');
   const [dataProcedimento, setDataProcedimento] = useState(new Date().toISOString().split('T')[0]);
   const [observacoes, setObservacoes] = useState('');
+  const [medicamentos, setMedicamentos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
@@ -22,7 +24,7 @@ export default function ProcedimentoIndividualPage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 
@@ -38,9 +40,9 @@ export default function ProcedimentoIndividualPage() {
           animalId,
           tipo: 'Individual',
           dataProcedimento,
-          observacoes,
+          observacoes: observacoes + (medicamentos.length ? ` | Medicamentos: ${medicamentos.join('; ')}` : ''),
           registradoPor: 'usuario',
-          pesoEstimado: pesoKg ? parseFloat(pesoKg) / 15 : null,
+          pesoEstimado: pesoKg ? parseFloat(pesoKg) / 30 : null,
           loteNome: lote || null,
         }),
       });
@@ -68,8 +70,11 @@ export default function ProcedimentoIndividualPage() {
         <Campo label="Data do Procedimento">
           <Input type="date" value={dataProcedimento} onChange={e => setDataProcedimento(e.target.value)} required />
         </Campo>
-        <Campo label="Observações (Medicamentos, Dosagem, etc)">
+        <Campo label="Observações (Dosagem, etc)">
           <Textarea value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Descreva o procedimento..." required />
+        </Campo>
+        <Campo label="Medicamentos Utilizados">
+          <Medicamentos selecionados={medicamentos} onChange={setMedicamentos} />
         </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />

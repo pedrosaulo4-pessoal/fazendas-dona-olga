@@ -23,7 +23,7 @@ export default function VendaPage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 

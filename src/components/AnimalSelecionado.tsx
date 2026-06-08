@@ -16,11 +16,12 @@ interface Props {
   onPesoKgChange: (v: string) => void;
   lote: string;
   onLoteChange: (v: string) => void;
+  showPeso?: boolean;
 }
 
 const LOTES = ['Novilhada','Paridas','Bezerros Engorda','Leiteiro','Descarte','24h','Perdido'];
 
-export default function AnimalSelecionado({ animal, pesoKg, onPesoKgChange, lote, onLoteChange }: Props) {
+export default function AnimalSelecionado({ animal, pesoKg, onPesoKgChange, lote, onLoteChange, showPeso = true }: Props) {
   const corHex = animal.corBrinco ? COR_HEX[animal.corBrinco] : null;
 
   return (
@@ -63,32 +64,34 @@ export default function AnimalSelecionado({ animal, pesoKg, onPesoKgChange, lote
       </div>
 
       {/* Linha 3: peso editável */}
-      <div>
-        <label className="text-[11px] font-bold tracking-[0.12em] uppercase text-gray-600 block mb-1">
-          Último Peso (KG) — editável se houver peso mais atual
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            step="0.1"
-            value={pesoKg}
-            onChange={e => onPesoKgChange(e.target.value)}
-            placeholder="0.0"
-            className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-800 text-base
-                       shadow-[2px_2px_0_rgba(0,0,0,0.10)] outline-none focus:border-[#1a237e]"
-          />
-          {pesoKg && (
-            <span className="text-xs text-gray-500 whitespace-nowrap">
-              {(parseFloat(pesoKg) / 15).toFixed(2)} @
-            </span>
+      {showPeso && (
+        <div>
+          <label className="text-[11px] font-bold tracking-[0.12em] uppercase text-gray-600 block mb-1">
+            Último Peso (KG) — editável se houver peso mais atual
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              step="0.1"
+              value={pesoKg}
+              onChange={e => onPesoKgChange(e.target.value)}
+              placeholder="0.0"
+              className="w-full bg-white border border-gray-300 rounded px-4 py-3 text-gray-800 text-base
+                         shadow-[2px_2px_0_rgba(0,0,0,0.10)] outline-none focus:border-[#1a237e]"
+            />
+            {pesoKg && (
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                {(parseFloat(pesoKg) / 30).toFixed(2)} @
+              </span>
+            )}
+          </div>
+          {animal.peso != null && !pesoKg && (
+            <p className="text-xs text-gray-400 mt-1">
+              Cadastrado: {(animal.peso * 30).toFixed(0)} kg / {animal.peso.toFixed(2)} @
+            </p>
           )}
         </div>
-        {animal.peso != null && !pesoKg && (
-          <p className="text-xs text-gray-400 mt-1">
-            Cadastrado: {(animal.peso * 15).toFixed(0)} kg / {animal.peso.toFixed(2)} @
-          </p>
-        )}
-      </div>
+      )}
 
       {/* Linha 4: lote editável */}
       <div>

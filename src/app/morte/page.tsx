@@ -25,7 +25,7 @@ export default function MortePage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 
@@ -49,7 +49,7 @@ export default function MortePage() {
         body: JSON.stringify({
           animalId,
           dataMorte,
-          peso: pesoKg ? parseFloat(pesoKg) / 15 : null,
+          peso: pesoKg ? parseFloat(pesoKg) / 30 : null,
           observacoes,
         }),
       });

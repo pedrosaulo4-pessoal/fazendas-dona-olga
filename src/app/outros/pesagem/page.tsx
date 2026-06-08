@@ -22,7 +22,7 @@ export default function PesagemPage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 
@@ -32,7 +32,7 @@ export default function PesagemPage() {
     if (!pesoKg) { setErro('Informe o peso em KG.'); return; }
     setErro(''); setLoading(true);
     try {
-      const pesoArroba = (parseFloat(pesoKg) / 15).toFixed(2);
+      const pesoArroba = (parseFloat(pesoKg) / 30).toFixed(2);
       const res = await fetch('/api/pesagem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,8 +56,27 @@ export default function PesagemPage() {
             animal={animal}
             pesoKg={pesoKg} onPesoKgChange={setPesoKg}
             lote={lote} onLoteChange={setLote}
+            showPeso={false}
           />
         )}
+
+        <Campo label="Peso Atual (KG)">
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              step="0.1"
+              value={pesoKg}
+              onChange={e => setPesoKg(e.target.value)}
+              placeholder="0.0"
+              required
+            />
+            {pesoKg && (
+              <span className="text-sm text-gray-500 whitespace-nowrap font-medium">
+                {(parseFloat(pesoKg) / 30).toFixed(2)} @
+              </span>
+            )}
+          </div>
+        </Campo>
 
         <Campo label="Informe a Data da Pesagem">
           <Input type="date" value={dataPesagem} onChange={e => setDataPesagem(e.target.value)} required />

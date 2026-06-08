@@ -46,10 +46,15 @@ function fmtData(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
-function calcularIdade(dataRegistro: string): string {
+function calcularIdade(dataRegistro: string, status: string, procedimentos: Array<{ dataProcedimento: string }>): string {
   const nasc = new Date(dataRegistro);
-  const hoje = new Date();
-  const meses = (hoje.getFullYear() - nasc.getFullYear()) * 12 + (hoje.getMonth() - nasc.getMonth());
+  let fim: Date;
+  if (status !== 'Ativo' && procedimentos.length > 0) {
+    fim = new Date(procedimentos[procedimentos.length - 1].dataProcedimento);
+  } else {
+    fim = new Date();
+  }
+  const meses = (fim.getFullYear() - nasc.getFullYear()) * 12 + (fim.getMonth() - nasc.getMonth());
   if (meses < 1) return 'Menos de 1 mês';
   if (meses < 12) return `${meses} mês${meses > 1 ? 'es' : ''}`;
   const anos = Math.floor(meses / 12);
@@ -143,9 +148,9 @@ export default function AnimalDetalhe() {
           <LinhaInfo label="Lote" valor={animal.lote} />
           <LinhaInfo
             label="Peso"
-            valor={animal.peso != null ? `${(animal.peso * 15).toFixed(0)} kg  /  ${animal.peso.toFixed(2)} @` : null}
+            valor={animal.peso != null ? `${(animal.peso * 30).toFixed(0)} kg  /  ${animal.peso.toFixed(2)} @` : null}
           />
-          <LinhaInfo label="Idade" valor={calcularIdade(dataRef)} />
+          <LinhaInfo label="Idade" valor={calcularIdade(dataRef, animal.status, animal.procedimentos)} />
           <LinhaInfo label="Data de Registro" valor={fmtData(dataRef)} />
           {animal.observacoes && (
             <div className="py-2">
@@ -170,7 +175,7 @@ export default function AnimalDetalhe() {
                   </div>
                   {p.pesoEstimado != null && (
                     <p className="text-xs mt-0.5 opacity-80">
-                      Peso: {(p.pesoEstimado * 15).toFixed(0)} kg / {p.pesoEstimado.toFixed(2)} @
+                      Peso: {(p.pesoEstimado * 30).toFixed(0)} kg / {p.pesoEstimado.toFixed(2)} @
                     </p>
                   )}
                   {p.observacoes && <p className="text-xs mt-1 opacity-80">{p.observacoes}</p>}

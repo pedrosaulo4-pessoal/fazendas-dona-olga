@@ -22,7 +22,7 @@ export default function AbortoPage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 
@@ -40,7 +40,7 @@ export default function AbortoPage() {
           dataProcedimento: dataAborto,
           observacoes: detalhe,
           registradoPor: 'usuario',
-          pesoEstimado: pesoKg ? parseFloat(pesoKg) / 15 : null,
+          pesoEstimado: pesoKg ? parseFloat(pesoKg) / 30 : null,
           loteNome: lote || null,
         }),
       });

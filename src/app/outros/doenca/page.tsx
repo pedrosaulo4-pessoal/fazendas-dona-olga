@@ -5,6 +5,7 @@ import FormPage from '@/components/FormPage';
 import BuscaAnimal, { AnimalEncontrado } from '@/components/BuscaAnimal';
 import AnimalSelecionado from '@/components/AnimalSelecionado';
 import { Campo, Input, Textarea, BotaoSalvar, MensagemSucesso } from '@/components/CampoForm';
+import Medicamentos from '@/components/Medicamentos';
 
 export default function DoencaPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function DoencaPage() {
   const [lote, setLote] = useState('');
   const [dataObservacao, setDataObservacao] = useState(new Date().toISOString().split('T')[0]);
   const [detalhe, setDetalhe] = useState('');
+  const [medicamentos, setMedicamentos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState('');
@@ -22,7 +24,7 @@ export default function DoencaPage() {
   function handleSelect(a: AnimalEncontrado) {
     setAnimalId(a.id);
     setAnimal(a);
-    setPesoKg(a.peso != null ? String((a.peso * 15).toFixed(1)) : '');
+    setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
   }
 
@@ -38,7 +40,7 @@ export default function DoencaPage() {
           animalId,
           acao: 'doenca',
           dataObservacao,
-          observacoes: `DOENÇA/CONDIÇÃO (${dataObservacao}): ${detalhe}`,
+          observacoes: `DOENÇA/CONDIÇÃO (${dataObservacao}): ${detalhe}${medicamentos.length ? ` | Medicamentos: ${medicamentos.join('; ')}` : ''}`,
           sexo: animal?.sexo,
           lote: lote || animal?.lote,
         }),
@@ -69,6 +71,9 @@ export default function DoencaPage() {
         </Campo>
         <Campo label="Detalhar a Situação">
           <Textarea value={detalhe} onChange={e => setDetalhe(e.target.value)} placeholder="Descreva os sintomas ou condição observada..." required />
+        </Campo>
+        <Campo label="Medicamentos Utilizados">
+          <Medicamentos selecionados={medicamentos} onChange={setMedicamentos} />
         </Campo>
         {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
         <BotaoSalvar loading={loading} />

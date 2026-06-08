@@ -26,7 +26,7 @@ export default function CompraPage() {
         body: JSON.stringify({
           ...form,
           operacao: 'compra',
-          peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) / 15 : null,
+          peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) / 30 : null,
           observacoes: `Comprado em ${form.dataCompra}. Origem: ${form.origem}. ${form.observacoes}`,
         }),
       });

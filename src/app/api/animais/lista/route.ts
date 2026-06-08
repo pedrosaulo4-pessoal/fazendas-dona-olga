@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get('status') || '';
   const sexo = searchParams.get('sexo') || '';
   const lote = searchParams.get('lote') || '';
+  const espec = searchParams.get('espec') || '';
   const pagina = parseInt(searchParams.get('pagina') || '1');
   const porPagina = parseInt(searchParams.get('porPagina') || '20');
 
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
   if (status) where.status = status;
   if (sexo) where.sexo = sexo;
   if (lote) where.lote = lote;
+  if (espec) where.espec = espec;
   if (q) {
     where.OR = [
       { numero: { contains: q } },

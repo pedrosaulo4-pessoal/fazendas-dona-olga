@@ -67,7 +67,7 @@ export default function FotoPage() {
                 <span className="text-gray-500 text-sm text-center">Toque para selecionar ou tirar uma foto</span>
               </>
             )}
-            <input ref={inputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
           </div>
           {arquivo && <p className="text-xs text-gray-500 mt-1 text-center">{arquivo.name}</p>}
         </Campo>

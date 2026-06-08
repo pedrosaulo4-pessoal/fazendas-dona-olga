@@ -32,6 +32,7 @@ export default function AnimaisPage() {
   const [filtroStatus, setFiltroStatus] = useState('Ativo');
   const [filtroSexo, setFiltroSexo] = useState('');
   const [filtroLote, setFiltroLote] = useState('');
+  const [filtroEspec, setFiltroEspec] = useState('');
   const [pagina, setPagina] = useState(1);
   const POR_PAGINA = 20;
 
@@ -42,6 +43,7 @@ export default function AnimaisPage() {
     if (filtroStatus) params.set('status', filtroStatus);
     if (filtroSexo) params.set('sexo', filtroSexo);
     if (filtroLote) params.set('lote', filtroLote);
+    if (filtroEspec) params.set('espec', filtroEspec);
     params.set('pagina', String(pagina));
     params.set('porPagina', String(POR_PAGINA));
     try {
@@ -51,12 +53,12 @@ export default function AnimaisPage() {
       setTotal(data.total || 0);
     } catch { /* silencia */ }
     finally { setLoading(false); }
-  }, [busca, filtroStatus, filtroSexo, filtroLote, pagina]);
+  }, [busca, filtroStatus, filtroSexo, filtroLote, filtroEspec, pagina]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
   // Reset página ao mudar filtros
-  useEffect(() => { setPagina(1); }, [busca, filtroStatus, filtroSexo, filtroLote]);
+  useEffect(() => { setPagina(1); }, [busca, filtroStatus, filtroSexo, filtroLote, filtroEspec]);
 
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
@@ -71,10 +73,10 @@ export default function AnimaisPage() {
           onChange={e => setBusca(e.target.value)}
           className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base bg-white shadow-sm outline-none focus:border-[#1a237e]"
         />
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-            <option value="">Todos</option>
+            <option value="">Todos status</option>
             <option value="Ativo">Ativo</option>
             <option value="Vendido">Vendido</option>
             <option value="Morto">Morto</option>
@@ -82,14 +84,21 @@ export default function AnimaisPage() {
           <select value={filtroSexo} onChange={e => setFiltroSexo(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
             <option value="">Sexo</option>
-            <option value="Macho">Macho</option>
-            <option value="Fêmea">Fêmea</option>
+            <option value="M">Macho</option>
+            <option value="F">Fêmea</option>
           </select>
           <select value={filtroLote} onChange={e => setFiltroLote(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
             <option value="">Lote</option>
             {['Novilhada','Paridas','Bezerros Engorda','Leiteiro','Descarte','24h','Perdido'].map(l =>
               <option key={l} value={l}>{l}</option>
+            )}
+          </select>
+          <select value={filtroEspec} onChange={e => setFiltroEspec(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+            <option value="">Espécie</option>
+            {['Vaca','Novilha','Bezerra','Bezerro','Touro'].map(e =>
+              <option key={e} value={e}>{e}</option>
             )}
           </select>
         </div>
@@ -129,7 +138,7 @@ export default function AnimaisPage() {
               </div>
               <div className="flex justify-between text-xs text-gray-500 mt-0.5">
                 <span>{a.lote || '—'}</span>
-                {a.peso != null && <span>{(a.peso * 15).toFixed(0)} kg</span>}
+                {a.peso != null && <span>{(a.peso * 30).toFixed(0)} kg</span>}
               </div>
             </div>
           ))}

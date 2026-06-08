@@ -51,7 +51,7 @@ export default function NascimentoPage() {
           pelagem: form.pelagem,
           numero: null,
           observacoes: obs,
-          peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) : null,
+          peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) / 30 : null,
           lote: form.lote,
           corBrinco: form.corBrinco || null,
           numeroMae: form.numeroMae || null,
