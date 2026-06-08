@@ -9,12 +9,10 @@ function createPrismaClient(): PrismaClient {
 
   if (tursoUrl && tursoUrl !== 'undefined') {
     // Produção: Turso (SQLite na nuvem)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createClient } = require('@libsql/client');
+    // PrismaLibSql é uma factory — recebe config diretamente, não um client pré-criado
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSql } = require('@prisma/adapter-libsql');
-    const libsql = createClient({ url: tursoUrl, authToken: tursoToken });
-    const adapter = new PrismaLibSql(libsql);
+    const adapter = new PrismaLibSql({ url: tursoUrl, authToken: tursoToken });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new PrismaClient({ adapter } as any);
   }
