@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = req.cookies.get('session');
-  if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-
   let usuario = 'sistema';
-  try { usuario = JSON.parse(session.value).login; } catch { /* usa 'sistema' */ }
+  try {
+    if (session?.value) usuario = JSON.parse(session.value).login;
+  } catch { /* usa 'sistema' */ }
 
   try {
     const body = await req.json();
