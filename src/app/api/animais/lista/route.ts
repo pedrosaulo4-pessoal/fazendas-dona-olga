@@ -20,8 +20,12 @@ export async function GET(req: NextRequest) {
   if (espec) where.espec = espec;
   if (q) {
     where.OR = [
-      { numero: { contains: q } },
-      { apelido: { contains: q } },
+      { numero:    { contains: q } },
+      { apelido:   { contains: q } },
+      { numeroMae: { contains: q } },
+      { apelidoMae:{ contains: q } },
+      { observacoes:{ contains: q } },
+      { lote:      { contains: q } },
     ];
   }
 

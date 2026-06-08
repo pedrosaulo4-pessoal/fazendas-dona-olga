@@ -12,6 +12,7 @@ export default function NascimentoPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     numeroMae: '', apelidoMae: '',
+    numeroFilhote: '', apelidoFilhote: '',
     dataNascimento: new Date().toISOString().split('T')[0],
     sexo: 'F', pesoEstimado: '', lote: 'Paridas', pelagem: 'Branco', corBrinco: '',
   });
@@ -51,6 +52,8 @@ export default function NascimentoPage() {
           pelagem: form.pelagem,
           numero: null,
           observacoes: obs,
+          numero: form.numeroFilhote || null,
+          apelido: form.apelidoFilhote || null,
           peso: form.pesoEstimado ? parseFloat(form.pesoEstimado) / 30 : null,
           lote: form.lote,
           corBrinco: form.corBrinco || null,
@@ -86,6 +89,10 @@ export default function NascimentoPage() {
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Nº da Mãe"><Input value={form.numeroMae} onChange={e => set('numeroMae', e.target.value)} placeholder="Ex: A199" /></Campo>
           <Campo label="Apelido da Mãe"><Input value={form.apelidoMae} onChange={e => set('apelidoMae', e.target.value)} placeholder="Ex: Devassa" /></Campo>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Campo label="Nº do Filhote"><Input value={form.numeroFilhote} onChange={e => set('numeroFilhote', e.target.value)} placeholder="Ex: B001" /></Campo>
+          <Campo label="Apelido do Filhote"><Input value={form.apelidoFilhote} onChange={e => set('apelidoFilhote', e.target.value)} placeholder="Opcional" /></Campo>
         </div>
         <Campo label="Informe a Data de Nascimento">
           <Input type="date" value={form.dataNascimento} onChange={e => set('dataNascimento', e.target.value)} required />
