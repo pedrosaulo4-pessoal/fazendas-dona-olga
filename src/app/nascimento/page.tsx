@@ -59,7 +59,10 @@ export default function NascimentoPage() {
           acao: 'nascimento',
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
       const animalCriado = await res.json();
       if (foto && animalCriado?.id) {
         const fd = new FormData();
@@ -70,7 +73,10 @@ export default function NascimentoPage() {
         await fetch('/api/foto', { method: 'POST', body: fd });
       }
       setSucesso(true);
-    } catch { setErro('Erro ao salvar. Tente novamente.'); }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      setErro(`Erro: ${msg}`);
+    }
     finally { setLoading(false); }
   }
 

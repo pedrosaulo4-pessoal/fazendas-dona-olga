@@ -27,32 +27,42 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = req.cookies.get('session');
   if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  const usuario = JSON.parse(session.value).login;
 
-  const body = await req.json();
+  let usuario = 'sistema';
+  try { usuario = JSON.parse(session.value).login; } catch { /* usa 'sistema' */ }
 
-  const animal = await prisma.animal.create({
-    data: {
-      dataRegistro: new Date(body.dataRegistro),
-      status: body.status ?? 'Ativo',
-      sexo: body.sexo,
-      tipo: body.tipo,
-      espec: body.espec,
-      pelagem: body.pelagem,
-      numero: body.numero || null,
-      apelido: body.apelido || null,
-      observacoes: body.observacoes || null,
-      peso: body.peso ? parseFloat(body.peso) : null,
-      pesoRef: body.pesoRef ? parseFloat(body.pesoRef) : null,
-      corBrinco: body.corBrinco || null,
-      lote: body.lote || null,
-      criadoPor: usuario,
-    },
-  });
+  try {
+    const body = await req.json();
 
-  await prisma.auditLog.create({
-    data: { usuario, acao: body.acao ?? 'cadastro', animalId: animal.id, detalhes: JSON.stringify(body) },
-  });
+    const animal = await prisma.animal.create({
+      data: {
+        dataRegistro: new Date(body.dataRegistro),
+        status: body.status ?? 'Ativo',
+        sexo: body.sexo,
+        tipo: body.tipo,
+        espec: body.espec,
+        pelagem: body.pelagem,
+        numero: body.numero || null,
+        apelido: body.apelido || null,
+        observacoes: body.observacoes || null,
+        peso: body.peso ? parseFloat(body.peso) : null,
+        pesoRef: body.pesoRef ? parseFloat(body.pesoRef) : null,
+        corBrinco: body.corBrinco || null,
+        lote: body.lote || null,
+        numeroMae: body.numeroMae || null,
+        apelidoMae: body.apelidoMae || null,
+        criadoPor: usuario,
+      },
+    });
 
-  return NextResponse.json(animal);
+    await prisma.auditLog.create({
+      data: { usuario, acao: body.acao ?? 'cadastro', animalId: animal.id, detalhes: JSON.stringify(body) },
+    });
+
+    return NextResponse.json(animal);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[POST /api/animais]', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
