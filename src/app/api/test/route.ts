@@ -1,16 +1,29 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 
 export async function GET() {
-  const env = process.env as Record<string, string | undefined>;
-  const urlRaw = env['TURSO_DATABASE_URL'];
-  const urlStatus = !urlRaw ? 'ausente' : urlRaw === 'undefined' ? 'string-undefined' : `ok (${urlRaw.slice(0, 20)}...)`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const env = process.env as any;
+  const tursoUrl   = env['TURSO_DATABASE_URL']?.trim();
+  const tursoToken = env['TURSO_AUTH_TOKEN']?.trim();
 
+  const urlStatus = !tursoUrl ? 'ausente'
+    : tursoUrl === 'undefined' ? 'string-undefined'
+    : `ok (${tursoUrl.slice(0, 25)}...)`;
+
+  // Testa conexão direta com Turso SEM Prisma
   try {
-    const count = await prisma.animal.count();
-    return NextResponse.json({ ok: true, total_animais: count, url_status: urlStatus });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require('@libsql/client');
+    const client = createClient({ url: tursoUrl, authToken: tursoToken });
+    const result = await client.execute('SELECT COUNT(*) as n FROM Animal');
+    return NextResponse.json({
+      ok: true,
+      total_animais: Number(result.rows[0].n),
+      url_status: urlStatus,
+      via: 'libsql-direto',
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ ok: false, error: msg, url_status: urlStatus }, { status: 500 });
+    return NextResponse.json({ ok: false, error: msg, url_status: urlStatus, via: 'libsql-direto' }, { status: 500 });
   }
 }
