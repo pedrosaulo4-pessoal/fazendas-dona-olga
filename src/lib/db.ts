@@ -8,8 +8,8 @@ function createPrismaClient(): PrismaClient {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSQL } = require('@prisma/adapter-libsql');
     const libsql = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+      url: process.env.TURSO_DATABASE_URL.trim(),
+      authToken: process.env.TURSO_AUTH_TOKEN?.trim(),
     });
     const adapter = new PrismaLibSQL(libsql);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
