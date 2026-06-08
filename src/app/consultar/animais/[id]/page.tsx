@@ -76,12 +76,34 @@ function LinhaInfo({ label, valor, cor }: { label: string; valor?: string | null
   );
 }
 
+const MOTIVOS_EXCLUSAO = ['Não encontrado', 'Registro de teste'];
+
 export default function AnimalDetalhe() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [modalExcluir, setModalExcluir] = useState(false);
+  const [motivoSelecionado, setMotivoSelecionado] = useState('');
+  const [excluindo, setExcluindo] = useState(false);
+
+  async function handleExcluir() {
+    if (!motivoSelecionado) return;
+    setExcluindo(true);
+    try {
+      const res = await fetch(`/api/animais/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo: motivoSelecionado }),
+      });
+      if (!res.ok) throw new Error('Falha ao excluir');
+      router.replace('/consultar/animais');
+    } catch {
+      setExcluindo(false);
+      setModalExcluir(false);
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/animais/${id}`)
@@ -189,7 +211,57 @@ export default function AnimalDetalhe() {
           className="w-full py-4 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white mt-2">
           ← Voltar para Lista
         </button>
+
+        {/* Botão excluir */}
+        <button
+          onClick={() => { setMotivoSelecionado(''); setModalExcluir(true); }}
+          className="w-full py-3 border border-red-300 rounded-xl text-sm font-medium text-red-600 bg-white mt-1"
+        >
+          🗑️ Excluir Registro
+        </button>
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {modalExcluir && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 shadow-xl">
+            <h2 className="text-base font-bold text-gray-800 text-center">Excluir Registro</h2>
+            <p className="text-sm text-gray-600 text-center">Selecione o motivo da exclusão:</p>
+
+            <div className="flex flex-col gap-2">
+              {MOTIVOS_EXCLUSAO.map(motivo => (
+                <button
+                  key={motivo}
+                  onClick={() => setMotivoSelecionado(motivo)}
+                  className={`w-full py-3 rounded-xl text-sm font-medium border-2 transition-all
+                    ${motivoSelecionado === motivo
+                      ? 'border-red-500 bg-red-50 text-red-700'
+                      : 'border-gray-200 bg-white text-gray-700'}`}
+                >
+                  {motivo}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleExcluir}
+              disabled={!motivoSelecionado || excluindo}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-red-600 text-white
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {excluindo ? 'Excluindo...' : 'Confirmar Exclusão'}
+            </button>
+
+            <button
+              onClick={() => setModalExcluir(false)}
+              disabled={excluindo}
+              className="w-full py-2 text-sm text-gray-500"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </FormPage>
   );
 }
