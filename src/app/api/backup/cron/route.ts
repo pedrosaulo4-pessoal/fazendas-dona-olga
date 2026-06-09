@@ -19,21 +19,8 @@ function autorizado(req: NextRequest): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  const cronSecret = env['CRON_SECRET'];
-  const querySecret = new URL(req.url).searchParams.get('secret');
-
   if (!autorizado(req)) {
-    // Debug: mostrar info sobre o secret (sem revelar o valor completo)
-    return NextResponse.json({
-      error: 'Não autorizado',
-      debug: {
-        hasCronSecret: !!cronSecret,
-        cronSecretLen: cronSecret?.length ?? 0,
-        hasQuerySecret: !!querySecret,
-        querySecretLen: querySecret?.length ?? 0,
-        match: cronSecret && querySecret ? cronSecret === querySecret : false,
-      }
-    }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
