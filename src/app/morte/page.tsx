@@ -30,6 +30,7 @@ export default function MortePage() {
     setPesoKg(a.peso != null ? String((a.peso * 30).toFixed(1)) : '');
     setLote(a.lote ?? '');
     setSexo(a.sexo ?? 'F');
+    setNumeroMae(a.numeroMae ?? '');
   }
 
   function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -43,15 +44,25 @@ export default function MortePage() {
 
   // Monta o nome da foto: (numero|sem-brinco)-DD-MM-AAAA-sexo
   function montarNomeFoto(): string {
-    const nomeAnimal = (animal?.numero || semBrinco) ? (animal?.numero ?? 'sem-brinco') : 'sem-brinco';
+    const nomeAnimal = animal?.numero ?? 'sem-brinco';
     const [ano, mes, dia] = dataMorte.split('-');
     return `${nomeAnimal}-${dia}-${mes}-${ano}-${sexo}`;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!animalId && !semBrinco) { setErro('Selecione o animal ou marque "Sem Brinco".'); return; }
-    if (!foto) { setErro('A foto é obrigatória para registrar uma morte.'); return; }
+    if (!animalId) {
+      setErro('Selecione o animal na lista antes de salvar.');
+      return;
+    }
+    if (!foto) {
+      setErro('A foto é obrigatória para registrar uma morte.');
+      return;
+    }
+    if (!observacoes.trim()) {
+      setErro('Informe a causa e local da morte nas observações.');
+      return;
+    }
     setErro(''); setLoading(true);
     try {
       const res = await fetch('/api/morte', {
@@ -74,11 +85,16 @@ export default function MortePage() {
       // Salva foto com nome padronizado
       const fd = new FormData();
       fd.append('foto', foto);
-      fd.append('animalId', animalId ? String(animalId) : '');
+      fd.append('animalId', String(animalId));
       fd.append('numero', animal?.numero ?? 'sem-brinco');
       fd.append('dataFoto', dataMorte);
       fd.append('nomeCustom', montarNomeFoto());
-      await fetch('/api/foto', { method: 'POST', body: fd });
+      const fotoRes = await fetch('/api/foto', { method: 'POST', body: fd });
+      if (!fotoRes.ok) {
+        const fotoErr = await fotoRes.json().catch(() => ({}));
+        console.warn('[morte] foto upload falhou:', fotoErr);
+        // Não bloqueia o sucesso — o registro da morte foi salvo
+      }
 
       setSucesso(true);
     } catch (err: unknown) {
@@ -90,8 +106,29 @@ export default function MortePage() {
   return (
     <FormPage titulo="Informar Morte">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Campo label="Nº do Animal">
-          <BuscaAnimal semBrinco={semBrinco} onSemBrincoChange={setSemBrinco} onSelect={handleSelect} />
+
+        {/* Busca do animal — obrigatório */}
+        <Campo label="Selecione o Animal *">
+          <BuscaAnimal
+            semBrinco={semBrinco}
+            onSemBrincoChange={v => {
+              setSemBrinco(v);
+              // limpa seleção anterior ao mudar o filtro
+              setAnimalId(null);
+              setAnimal(null);
+            }}
+            onSelect={handleSelect}
+          />
+          {semBrinco && !animal && (
+            <p className="text-xs text-blue-600 mt-1">
+              Mostrando animais sem número de brinco. Clique em um para selecionar.
+            </p>
+          )}
+          {animal && (
+            <p className="text-xs text-green-700 mt-1 font-medium">
+              ✓ {animal.numero ? `Nº ${animal.numero}` : 'Sem brinco'}{animal.apelido ? ` — ${animal.apelido}` : ''} · {animal.espec} · {animal.sexo}
+            </p>
+          )}
         </Campo>
 
         {animal && (
@@ -102,6 +139,7 @@ export default function MortePage() {
           />
         )}
 
+        {/* Sexo e Nº da Mãe */}
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Sexo">
             <Select value={sexo} onChange={e => setSexo(e.target.value)} required>
@@ -110,31 +148,42 @@ export default function MortePage() {
             </Select>
           </Campo>
           <Campo label="Nº da Mãe">
-            <Input value={numeroMae} onChange={e => setNumeroMae(e.target.value)} placeholder="Ex: A199" />
+            <Input
+              value={numeroMae}
+              onChange={e => setNumeroMae(e.target.value)}
+              placeholder="Ex: A199"
+            />
           </Campo>
         </div>
 
-        <Campo label="Informe a Data da Morte">
+        <Campo label="Data da Morte">
           <Input type="date" value={dataMorte} onChange={e => setDataMorte(e.target.value)} required />
         </Campo>
 
-        <Campo label="Observações (Causa e Local)">
-          <Textarea value={observacoes} onChange={e => setObservacoes(e.target.value)}
-            placeholder="Descreva a causa e local da morte..." required />
+        <Campo label="Causa e Local da Morte *">
+          <Textarea
+            value={observacoes}
+            onChange={e => setObservacoes(e.target.value)}
+            placeholder="Descreva a causa e local da morte..."
+          />
         </Campo>
 
-        <Campo label="Foto *Obrigatória">
-          <div onClick={() => inputFotoRef.current?.click()}
+        {/* Foto obrigatória */}
+        <Campo label="Foto * (obrigatória)">
+          <div
+            onClick={() => inputFotoRef.current?.click()}
             className="w-full border-2 border-dashed border-gray-300 rounded-lg bg-white
                        shadow-[3px_3px_0_rgba(0,0,0,0.12)] flex flex-col items-center justify-center
-                       cursor-pointer active:bg-gray-50 transition-all" style={{ minHeight: '90px' }}>
+                       cursor-pointer active:bg-gray-50 transition-all"
+            style={{ minHeight: '90px' }}
+          >
             {preview
               ? <img src={preview} alt="Foto" className="max-h-40 rounded-lg object-contain my-2" />
               : <span className="text-gray-500 text-base py-6">📷 Abrir Galeria</span>}
           </div>
           {foto && (
             <p className="text-xs text-gray-500 mt-1 text-center">
-              Nome do arquivo: <span className="font-mono font-semibold">{montarNomeFoto()}.{foto.name.split('.').pop()}</span>
+              Arquivo: <span className="font-mono font-semibold">{montarNomeFoto()}.{foto.name.split('.').pop()}</span>
             </p>
           )}
           <input ref={inputFotoRef} type="file" accept="image/*" className="hidden" onChange={handleFoto} />

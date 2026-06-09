@@ -5,19 +5,29 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q') ?? '';
   const status = searchParams.get('status') ?? 'Ativo';
+  const semBrinco = searchParams.get('semBrinco') === 'true';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = { status };
+
+  if (semBrinco) {
+    // Filtra animais sem número de brinco
+    where.numero = null;
+  }
+
+  if (q) {
+    where.OR = [
+      { numero: { contains: q } },
+      { apelido: { contains: q } },
+      { observacoes: { contains: q } },
+      { lote: { contains: q } },
+      { numeroMae: { contains: q } },
+    ];
+  }
 
   const animais = await prisma.animal.findMany({
-    where: {
-      status,
-      OR: q
-        ? [
-            { numero: { contains: q } },
-            { apelido: { contains: q } },
-            { observacoes: { contains: q } },
-          ]
-        : undefined,
-    },
-    orderBy: { numero: 'asc' },
+    where,
+    orderBy: [{ apelido: 'asc' }, { id: 'asc' }],
     take: 50,
   });
 
