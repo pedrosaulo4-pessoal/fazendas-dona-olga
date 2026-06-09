@@ -53,15 +53,11 @@ export default function OutrosPage() {
         <button
           onClick={handleAtualizar}
           disabled={atualizando}
-          className="w-full bg-white text-[#1a237e] text-base font-semibold py-5 rounded-lg border-2 border-[#1a237e]
-                     shadow-[4px_4px_0_rgba(26,35,126,0.2)] active:shadow-none active:translate-x-1 active:translate-y-1
+          className="w-full bg-gray-300 text-gray-700 text-base font-semibold py-5 rounded-lg
+                     shadow-[4px_4px_0_rgba(0,0,0,0.15)] active:shadow-none active:translate-x-1 active:translate-y-1
                      transition-all disabled:opacity-60 flex items-center justify-center gap-2"
         >
-          {atualizando ? (
-            <>⏳ Atualizando...</>
-          ) : (
-            <>🔄 Atualizar Aplicativo</>
-          )}
+          {atualizando ? '⏳ Atualizando...' : '🔄 Atualizar Aplicativo'}
         </button>
         <p className="text-xs text-gray-400 text-center -mt-2">
           Use quando o app não refletir as últimas mudanças
