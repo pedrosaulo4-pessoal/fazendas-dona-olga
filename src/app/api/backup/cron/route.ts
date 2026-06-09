@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
     const blob = await put(
       `APP-AFAZENDA/registros/${nomeArquivo}`,
       buffer,
-      { access: 'public', contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      { access: 'public', allowOverwrite: true, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
     );
 
     return NextResponse.json({

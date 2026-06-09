@@ -12,6 +12,11 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   {
+    label: 'Cadastro de Animal',
+    href: '/cadastro',
+    roles: ['admin', 'veterinario'],
+  },
+  {
     label: 'Informar nascimento',
     href: '/nascimento',
     roles: ['admin', 'veterinario', 'vaqueiro'],
