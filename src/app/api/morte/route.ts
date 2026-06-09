@@ -3,30 +3,57 @@ import { prisma } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   const session = req.cookies.get('session');
-  if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  const usuario = JSON.parse(session.value).login;
+  let usuario = 'sistema';
+  try { if (session?.value) usuario = JSON.parse(session.value).login; } catch { /* */ }
 
-  const body = await req.json();
+  try {
+    const body = await req.json();
+    const { animalId, dataMorte, peso, observacoes, sexo, numeroMae } = body;
 
-  // Atualiza o animal para Morto
-  const animal = await prisma.animal.update({
-    where: { id: parseInt(body.animalId) },
-    data: {
-      status: 'Morto',
-      peso: body.peso ? parseFloat(body.peso) : undefined,
-      observacoes: body.observacoes || undefined,
-      atualizadoEm: new Date(),
-    },
-  });
+    let animal = null;
 
-  await prisma.auditLog.create({
-    data: {
-      usuario,
-      acao: 'morte',
-      animalId: animal.id,
-      detalhes: JSON.stringify({ ...body, dataMorte: body.dataMorte }),
-    },
-  });
+    if (animalId) {
+      // Animal cadastrado: atualiza para Morto
+      const updateData: Record<string, unknown> = {
+        status: 'Morto',
+        atualizadoEm: new Date(),
+      };
+      if (peso)        updateData.peso        = parseFloat(peso);
+      if (observacoes) updateData.observacoes = observacoes;
+      if (sexo)        updateData.sexo        = sexo;
+      if (numeroMae)   updateData.numeroMae   = numeroMae;
 
-  return NextResponse.json(animal);
+      animal = await prisma.animal.update({
+        where: { id: parseInt(animalId) },
+        data: updateData,
+      });
+    }
+
+    // Cria procedimento de morte
+    await prisma.procedimento.create({
+      data: {
+        animalId: animal?.id ?? null,
+        tipo: 'Morte',
+        dataProcedimento: dataMorte ? new Date(dataMorte) : new Date(),
+        pesoEstimado: peso ? parseFloat(peso) : null,
+        observacoes: observacoes || null,
+        registradoPor: usuario,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        usuario,
+        acao: 'morte',
+        animalId: animal?.id ?? null,
+        detalhes: JSON.stringify(body),
+      },
+    });
+
+    return NextResponse.json({ ok: true, animal });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[POST /api/morte]', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

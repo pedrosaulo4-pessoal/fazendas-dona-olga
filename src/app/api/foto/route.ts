@@ -13,10 +13,11 @@ export async function POST(req: NextRequest) {
 
     if (!foto) return NextResponse.json({ error: 'Foto obrigatória' }, { status: 400 });
 
-    // Formato do nome: numero-DD-MM-AAAA.ext
+    const nomeCustom = fd.get('nomeCustom') as string | null;
     const [ano, mes, dia] = dataFoto.split('-');
     const ext = foto.name.split('.').pop() || 'jpg';
-    const nomeArquivo = `${numero}-${dia}-${mes}-${ano}.${ext}`;
+    const nomeBase = nomeCustom || `${numero}-${dia}-${mes}-${ano}`;
+    const nomeArquivo = `${nomeBase}.${ext}`;
     const pasta = path.join(process.cwd(), 'public', 'fotos_rebanho', numero);
 
     await mkdir(pasta, { recursive: true });
