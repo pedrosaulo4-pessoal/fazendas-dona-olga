@@ -10,6 +10,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         orderBy: { dataProcedimento: 'desc' },
         take: 20,
       },
+      fotos: {
+        orderBy: { criadoEm: 'desc' },
+        take: 5,
+      },
     },
   });
 
@@ -34,8 +38,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       data: { usuario, acao: 'exclusao', animalId, detalhes: motivo },
     });
 
-    // Exclui procedimentos vinculados e depois o animal
+    // Exclui procedimentos e fotos vinculados, desvincula auditLogs, depois exclui o animal
     await prisma.procedimento.deleteMany({ where: { animalId } });
+    await prisma.foto.deleteMany({ where: { animalId } });
+    // Desvincula auditLogs (mantém registro histórico, mas remove a FK)
+    await prisma.auditLog.updateMany({ where: { animalId }, data: { animalId: null } });
     await prisma.animal.delete({ where: { id: animalId } });
 
     return NextResponse.json({ ok: true });

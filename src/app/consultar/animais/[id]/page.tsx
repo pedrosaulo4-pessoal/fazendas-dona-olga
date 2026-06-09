@@ -22,6 +22,7 @@ type Animal = {
   numeroMae: string | null;
   apelidoMae: string | null;
   procedimentos: Array<{ id: number; tipo: string; dataProcedimento: string; observacoes: string | null; pesoEstimado: number | null }>;
+  fotos: Array<{ id: number; url: string; nome: string }>;
 };
 
 const STATUS_COR: Record<string, string> = {
@@ -83,7 +84,6 @@ export default function AnimalDetalhe() {
   const { id } = useParams<{ id: string }>();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [modalExcluir, setModalExcluir] = useState(false);
   const [motivoSelecionado, setMotivoSelecionado] = useState('');
   const [excluindo, setExcluindo] = useState(false);
@@ -110,11 +110,6 @@ export default function AnimalDetalhe() {
       .then(r => r.json())
       .then(d => {
         setAnimal(d);
-        // Tenta carregar foto
-        if (d.numero) {
-          const url = `/fotos_rebanho/${d.numero}`;
-          setFotoUrl(url);
-        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -137,15 +132,20 @@ export default function AnimalDetalhe() {
           {animal.apelido && <span className="text-gray-600 text-sm italic">&quot;{animal.apelido}&quot;</span>}
         </div>
 
-        {/* Foto */}
-        {fotoUrl && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <img
-              src={fotoUrl}
-              alt={`Foto animal ${animal.numero}`}
-              className="w-full object-cover max-h-56"
-              onError={() => setFotoUrl(null)}
-            />
+        {/* Fotos do Blob */}
+        {animal.fotos && animal.fotos.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {animal.fotos.map(f => (
+              <div key={f.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <img
+                  src={f.url}
+                  alt={f.nome}
+                  className="w-full object-cover max-h-64"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <p className="text-xs text-gray-400 text-center py-1 px-2">{f.nome}</p>
+              </div>
+            ))}
           </div>
         )}
 
