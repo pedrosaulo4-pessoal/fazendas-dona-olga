@@ -29,33 +29,26 @@ export default function BuscaAnimal({ onSelect, semBrinco, onSemBrincoChange }: 
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Busca por texto digitado
+  // Busca unificada: texto e/ou filtro sem brinco se combinam
   useEffect(() => {
-    if (semBrinco) return; // quando filtro sem brinco ativo, outro efeito cuida
-    if (q.length < 1) { setResultados([]); return; }
+    // Se sem brinco não está ativo e não há texto, limpa a lista
+    if (!semBrinco && q.length < 1) {
+      setResultados([]);
+      return;
+    }
+
     const t = setTimeout(async () => {
-      const res = await fetch(`/api/animais?q=${encodeURIComponent(q)}`);
+      const params = new URLSearchParams();
+      if (q.length > 0) params.set('q', q);
+      if (semBrinco)    params.set('semBrinco', 'true');
+      const res = await fetch(`/api/animais?${params.toString()}`);
       const data = await res.json();
       setResultados(data);
       setAberto(true);
     }, 300);
+
     return () => clearTimeout(t);
   }, [q, semBrinco]);
-
-  // Quando filtro "sem brinco" é ativado: carrega todos animais sem número
-  useEffect(() => {
-    if (!semBrinco) { return; }
-    async function carregarSemBrinco() {
-      const url = q.length > 0
-        ? `/api/animais?semBrinco=true&q=${encodeURIComponent(q)}`
-        : `/api/animais?semBrinco=true`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setResultados(data);
-      setAberto(true);
-    }
-    carregarSemBrinco();
-  }, [semBrinco, q]);
 
   // Fecha dropdown ao clicar fora
   useEffect(() => {

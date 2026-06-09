@@ -17,11 +17,17 @@ export async function GET(req: NextRequest) {
 
   if (q) {
     where.OR = [
-      { numero: { contains: q } },
-      { apelido: { contains: q } },
-      { observacoes: { contains: q } },
-      { lote: { contains: q } },
-      { numeroMae: { contains: q } },
+      { numero:     { contains: q } },
+      { apelido:    { contains: q } },
+      { espec:      { contains: q } },
+      { tipo:       { contains: q } },
+      { pelagem:    { contains: q } },
+      { sexo:       { contains: q } },
+      { lote:       { contains: q } },
+      { observacoes:{ contains: q } },
+      { numeroMae:  { contains: q } },
+      { apelidoMae: { contains: q } },
+      { corBrinco:  { contains: q } },
     ];
   }
 
