@@ -30,6 +30,16 @@ model Animal {
 
   procedimentos Procedimento[]
   auditLogs     AuditLog[]
+  fotos         Foto[]
+}
+
+model Foto {
+  id        Int      @id @default(autoincrement())
+  animalId  Int?
+  animal    Animal?  @relation(fields: [animalId], references: [id])
+  url       String
+  nome      String
+  criadoEm  DateTime @default(now())
 }
 
 model Procedimento {
