@@ -3,14 +3,18 @@ import { prisma } from '@/lib/db';
 import { put } from '@vercel/blob';
 import * as XLSX from 'xlsx';
 
+// Usa bracket notation para evitar inlining pelo Turbopack
+const env = process.env as Record<string, string | undefined>;
+
 // Protege contra chamadas externas (apenas Vercel Cron ou admin)
 function autorizado(req: NextRequest): boolean {
+  const cronSecret = env['CRON_SECRET'];
   const auth = req.headers.get('authorization');
   // Vercel Cron envia este header automaticamente
-  if (auth === `Bearer ${process.env.CRON_SECRET}`) return true;
+  if (cronSecret && auth === `Bearer ${cronSecret}`) return true;
   // Permite acesso manual via /api/backup/cron?secret=...
   const secret = new URL(req.url).searchParams.get('secret');
-  if (secret && secret === process.env.CRON_SECRET) return true;
+  if (secret && cronSecret && secret === cronSecret) return true;
   return false;
 }
 
